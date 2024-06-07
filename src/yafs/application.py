@@ -146,7 +146,7 @@ class Application:
             if type == self.TYPE_SOURCE:
                 self.modules_src.append(name)
             elif type == self.TYPE_SINK:
-                self.modules_sink = name
+                self.modules_sink.append(name) # MODIFIED!!!
 
             self.modules.append(name)
 

@@ -51,12 +51,13 @@ class Sim:
     SINK_METRIC = "SINK_M"
     LINK_METRIC = "LINK"
 
-    def __init__(self, topology, name_register='events_log.json', link_register='links_log.json', redis=None, purge_register=True, logger=None, default_results_path=None):
+    def __init__(self, topology, name_register='events_log.json', link_register='links_log.json', redis=None, purge_register=True, logger=None, default_results_path=None, metrics = None):
 
         self.env = simpy.Environment()
         """
         the discrete-event simulator (aka DES)
         """
+        self.cache_map = {}
 
         self.__idProcess = -1
         # an unique indentifier for each process in the DES
@@ -79,7 +80,12 @@ class Sim:
 
         self.until = 0 #End time simulation
 
-        self.metrics = Metrics(default_results_path=default_results_path)
+        self.tailored = False
+        if metrics:
+            self.metrics = metrics
+            self.tailored = True
+        else:
+            self.metrics = Metrics(default_results_path=default_results_path)
 
         self.unreachabled_links = 0
 
@@ -1122,7 +1128,7 @@ class Sim:
         print("-" * 40)
 
 
-    def run(self, until, show_progress_monitor=False, test_initial_deploy=False):
+    def run(self, until, show_progress_monitor=False, test_initial_deploy=False, silent=False):
 
 
         """
@@ -1161,8 +1167,8 @@ class Sim:
         #     """
         #     self.update_service_coverage()
 
-
-        self.print_debug_assignaments()
+        if not silent:
+            self.print_debug_assignaments()
 
 
         """
@@ -1173,3 +1179,6 @@ class Sim:
             self.env.run(until) #This does not stop the simpy.simulation at time. We have to force the stop
 
         self.metrics.close()
+        
+        if self.tailored:
+            return self.metrics.result
